@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.15)
-project(LoadShedder C)
+cmake_minimum_required(VERSION 3.10)
+project(C-Load-Shedder)
 set(CMAKE_C_STANDARD 11)
-add_executable(load_shedder main.c)
+add_executable(app src/main.c)
+add_executable(test_app tests/test_main.c)
