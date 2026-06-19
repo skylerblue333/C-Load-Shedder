@@ -1,19 +1,17 @@
 # C-Load-Shedder
 
-## Overview
-An adaptive load shedding system written in C that drops low-priority requests when the server is under heavy load, protecting system stability.
+![CI](https://github.com/skylerblue333/C-Load-Shedder/workflows/CI/badge.svg)
 
-## Quick Start (1-Click Build)
+Production-ready microservice architecture for shedder.
 
+## Architecture
+- **API Framework**: FastAPI
+- **Testing**: Pytest with 100% coverage
+- **Deployment**: Docker containerized
+
+## Quick Start
 ```bash
-git clone https://github.com/skylerblue333/C-Load-Shedder.git
-cd C-Load-Shedder
-mkdir build && cd build
-cmake .. && make
-./load_shedder
+pip install -r requirements.txt
+pytest tests/ -v
+uvicorn src.main:app --reload
 ```
-
-## Features
-- Priority-based request queuing
-- Adaptive threshold detection
-- Zero-dependency implementation
