@@ -1,9 +1,30 @@
-name: CI
-on: [push, pull_request]
+name: load-shedder-ci
+
+on:
+  push:
+    branches: [main, "product/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  verify:
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v3
-      - run: gcc -o app src/main.c && echo 'Build OK'
-      - run: gcc -o test_app tests/test_main.c && ./test_app
+      - uses: actions/checkout@v4
+      - name: Strict build
+        run: |
+          gcc -std=c11 -Wall -Wextra -Wpedantic -Werror -O2 -o app src/main.c
+          gcc -std=c11 -Wall -Wextra -Wpedantic -Werror -O2 -o test_app tests/test_main.c
+      - name: Contract tests
+        run: ./test_app
+      - name: Sanitizer build and tests
+        run: |
+          gcc -std=c11 -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -g -o app src/main.c
+          gcc -std=c11 -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -g -o test_app tests/test_main.c
+          ASAN_OPTIONS=detect_leaks=1 ./test_app
+      - name: CMake build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --parallel 2
