@@ -1,44 +1,34 @@
-<!-- PORTFOLIO PROJECT PROFILE: maintained by the repository owner -->
+# Sky Load Shedder
 
-## Project profile and code-audit snapshot
+**Status: engineering beta.** A small deterministic C admission-control primitive for deciding whether work should be accepted or shed as in-flight load approaches configured capacity.
 
-**What this is:** **C-Load-Shedder** is a public repository described as: “Adaptive load shedding system in C for high-throughput servers. #SkyCoin4444 #AI #Blockchain #DevOps #Innovation” Its dominant language signals are **C (2 files)**.
+## Behavior
 
-**Why it has value:** Its value is best understood through the implementation evidence currently present in the repository: **16 tracked files** were observed in the shallow audit, with the source structure and existing documentation providing the project’s specific context. This README does not treat a prototype, experiment, or archive as a production system without supporting evidence.
+```bash
+./app <in_flight> [capacity] [threshold_percent]
+```
 
-**Implementation evidence:** 1 test-related file(s) detected; 1 dependency or package manifest(s) detected; 2 build/CI/infrastructure signal(s) detected; and 3 documentation or governance file(s) detected. Test filenames observed include `tests/test_main.c`. Dependency or package files include `package.json`. Build, CI, or infrastructure signals include `Dockerfile`, `.github/workflows/ci.yml`.
+Defaults: capacity `1000`, threshold `85%`.
 
-**Current status:** The repository is tracked on the `main` branch. The existing source tree, configuration, tests, workflows, and documentation remain authoritative for supported behavior and maturity. A code audit is not a production-readiness certification, and the presence of a test or workflow file does not establish that all checks pass.
+- Below threshold: JSON decision `accept`, exit code `0`.
+- At or above threshold: JSON decision `shed`, exit code `3`.
+- Invalid configuration or load above declared capacity: exit code `2`.
 
-**Relationship to the wider portfolio:** This repository is one focused component of the broader Skyler Blue Spillers portfolio across AI, software engineering, cloud and DevOps, cybersecurity, blockchain, finance, education, social systems, and creative work. It may provide a service boundary, implementation pattern, experiment, archive, or reusable idea for related repositories. Treat repositories as technical dependencies only where documented interfaces and verified project requirements support that relationship.
+Example:
 
-**Quality and security note:** No obvious secret-like pattern was detected by the limited static scan; this is not a substitute for a security audit. No TODO/FIXME marker was detected in the scanned text files.
+```bash
+./app 850 1000 85
+# {"decision":"shed","in_flight":850,"capacity":1000,"threshold_percent":85}
+```
 
----
+## Verification
 
-# C Load Shedder
+CI enforces C11, `-Wall -Wextra -Wpedantic -Werror`, contract tests, AddressSanitizer/UBSan execution, and an independent CMake build. The container packages a static binary into a `scratch` image and runs as UID/GID 65532.
 
-![GitHub stars](https://img.shields.io/github/stars/skylerblue333/C-Load-Shedder?style=flat-square)
-![GitHub license](https://img.shields.io/github/license/skylerblue333/C-Load-Shedder?style=flat-square)
+## Scope limitations
 
-## 🌟 Overview
-**C-Load-Shedder** is a professional-grade project within the **SkyCoin4444** ecosystem. It focuses on delivering high-value solutions in the domain of **Software Development**.
+This is a local decision primitive. It does **not** measure live CPU/memory, proxy requests, coordinate distributed nodes, implement queues/backpressure, provide adaptive thresholds, authenticate callers, expose a network service, or claim production capacity/SLA figures.
 
-## 🚀 Key Features
-- **Scalable Architecture**: Designed for enterprise-level growth and performance.
-- **Modern Standards**: Implements best practices for clean code and maintainability.
-- **Robust Integration**: Built to work seamlessly within modern cloud-native environments.
+## SKYCOIN4444 integration
 
-## 🛠️ Technology Stack
-- **Primary Domain**: Software Development
-- **Ecosystem**: SkyCoin4444 Digital Platform
-
-## 📂 Structure
-The project is organized into a modular structure to ensure clarity and ease of development.
-
-## 👨‍💻 Author
-**Skyler Blue Spillers**
-*Professional Chess Player & Software Engineer*
-
----
-*Powered by SkyCoin4444*
+Use the binary or decision logic behind a verified gateway/work-queue integration where a simple deterministic saturation threshold is useful. Real load signals and operational policy remain deployment responsibilities.
