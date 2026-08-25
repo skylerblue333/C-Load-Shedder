@@ -1,36 +1,24 @@
-#include <stdio.h>
 #include <assert.h>
-#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/wait.h>
 
-#define MAX_ITEMS 1024
-
-typedef struct {
-    char key[64];
-    int value;
-} Item;
-
-Item store[MAX_ITEMS];
-int store_size = 0;
-
-int add_item(const char* key, int value) {
-    if (store_size >= MAX_ITEMS) return -1;
-    strncpy(store[store_size].key, key, 63);
-    store[store_size].value = value;
-    store_size++;
-    return store_size - 1;
-}
-
-int find_item(const char* key) {
-    for (int i = 0; i < store_size; i++) {
-        if (strcmp(store[i].key, key) == 0) return store[i].value;
+static int exit_code(const char *command) {
+    int status = system(command);
+    if (status == -1 || !WIFEXITED(status)) {
+        return -1;
     }
-    return -1;
+    return WEXITSTATUS(status);
 }
 
-int main() {
-    add_item("test_key", 42);
-    assert(find_item("test_key") == 42);
-    assert(find_item("missing") == -1);
-    printf("All tests passed!\n");
+int main(void) {
+    assert(exit_code("./app 0 >/tmp/sky-load-accept.json") == 0);
+    assert(exit_code("./app 849 1000 85 >/tmp/sky-load-below.json") == 0);
+    assert(exit_code("./app 850 1000 85 >/tmp/sky-load-shed.json") == 3);
+    assert(exit_code("./app 1001 1000 85 >/dev/null 2>&1") == 2);
+    assert(exit_code("./app nope >/dev/null 2>&1") == 2);
+    assert(exit_code("./app 10 0 85 >/dev/null 2>&1") == 2);
+    assert(exit_code("./app 10 1000 101 >/dev/null 2>&1") == 2);
+    puts("load shedder contract tests passed");
     return 0;
 }
