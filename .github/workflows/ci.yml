@@ -2,7 +2,7 @@ name: load-shedder-ci
 
 on:
   push:
-    branches: [main, "product/**"]
+    branches: [main, "product/**", "fix/**"]
   pull_request:
 
 permissions:
@@ -28,3 +28,21 @@ jobs:
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build --parallel 2
+          (cd build && ./test_app)
+      - name: Build image
+        run: docker build -t sky-load-shedder:ci .
+      - name: Verify non-root image
+        run: |
+          user="$(docker image inspect sky-load-shedder:ci --format '{{.Config.User}}')"
+          test -n "$user"
+          test "$user" != "0"
+          test "$user" != "root"
+      - name: Container decision smoke
+        run: |
+          docker run --rm sky-load-shedder:ci 100 1000 85 | grep -q '"decision":"accept"'
+          set +e
+          docker run --rm sky-load-shedder:ci 900 1000 85 >/tmp/shed.json
+          status=$?
+          set -e
+          test "$status" -eq 3
+          grep -q '"decision":"shed"' /tmp/shed.json
